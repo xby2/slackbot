@@ -39,8 +39,8 @@ func main() {
 		fmt.Printf("ID: %s, Name: %s\n", group.ID, group.Name)
 	}*/
 
-	// user, err := api.GetUserByEmail("moohh91@gmail.com")
-	/*user, err := api.GetUserInfo("UC72G0ATD")
+	// user, err := api.GetUserByEmail("")
+	/*user, err := api.GetUserInfo("")
 	if err != nil {
 		fmt.Printf("%s\n", err)
 		return
