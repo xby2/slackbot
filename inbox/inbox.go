@@ -5,12 +5,17 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"time"
 
 	"slackbot/outbox"
+	"slackbot/prompt"
 )
 
 var Inbox = make(chan InboundRequest, 100)
+
+var SERVICE_ADDRESS string = os.Getenv("SERVICE_ADDRESS")
+var BOT_TYPE string = os.Getenv("BOT_TYPE")
 
 func ProcessInbox() {
 	go func() {
@@ -26,22 +31,26 @@ func ProcessInbox() {
 func makeInboundRequest(inbound InboundRequest) {
 	// make request to chatbot
 
-	// j, _ := json.Marshal(inbound)
-	// var j = []byte(fmt.Sprintf(`{"prompt": "You are a helpful assistant.", "message": "%s"}`, inbound.Message))
-	var j = []byte(fmt.Sprintf(`{"prompt": "You are a proficient AI with a specialty in distilling information into key points. Based on the following text, identify and list the main points that were discussed or brought up. These should be the most important ideas, findings, or topics that are crucial to the essence of the discussion. Your goal is to provide a list that someone could read to quickly understand what was talked about.", "message": "%s"}`, inbound.Message))
+	// prepare Body for request, includes: prompt, message, maxtokens
+	// prompt pulled from prompt package
+	var j = []byte(fmt.Sprintf(`{"prompt": "%s", "message": "%s", "maxtokens": 100}`, prompt.PROMPTS[BOT_TYPE], inbound.Message))
 
-	req, _ := http.NewRequest("POST", "http://localhost:5005/eksy", bytes.NewBuffer(j))
+	// make request, timeout set to 5 minutes
+	req, _ := http.NewRequest("POST", SERVICE_ADDRESS, bytes.NewBuffer(j))
 	req.Header.Set("Content-Type", "application/json")
 	client := &http.Client{
 		Timeout: 5 * time.Minute,
 	}
 	resp, err := client.Do(req)
 
+	// on error, push error response to outbox
 	if err != nil {
 		outbound := outbox.OutboundRequest{
 			Caller:   inbound.Caller,
 			Message:  inbound.Message,
-			Response: "ERROR_OCCURED",
+			Response: err.Error(),
+			Start:    inbound.Start,
+			End:      time.Now(),
 		}
 
 		outbox.Outbox <- outbound
@@ -55,9 +64,11 @@ func makeInboundRequest(inbound InboundRequest) {
 		Caller:   inbound.Caller,
 		Message:  inbound.Message,
 		Response: string(body),
+		Start:    inbound.Start,
+		End:      time.Now(),
 	}
 
+	// push response to outbox
 	outbox.Outbox <- outbound
-
-	fmt.Printf(`inbound request: [caller:%s] [message:%s]`, inbound.Caller, inbound.Message)
+	//fmt.Printf(`inbound request: [caller:%s] [message:%s]`, inbound.Caller, inbound.Message)
 }

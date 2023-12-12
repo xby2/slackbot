@@ -2,6 +2,7 @@ package outbox
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/slack-go/slack"
 )
@@ -19,32 +20,15 @@ func ProcessOubox() {
 	}()
 }
 
+var SLACKBOT_TOKEN string = os.Getenv("SLACKBOT_TOKEN")
+
 func makeOutboundRequest(outbound OutboundRequest) {
 	// send request back to slack
 
-	fmt.Printf(`outbound request: [caller:%s] [response:%s]`, outbound.Caller, outbound.Response)
-
-	// api := slack.New("!!TOKEN!!")
-	api := slack.New("")
-
-	/*groups, err := api.GetUserGroups(slack.GetUserGroupsOptionIncludeUsers(false))
-
-	if err != nil {
-		fmt.Printf("%s\n", err)
-		return
-	}
-
-	for _, group := range groups {
-		fmt.Printf("ID: %s, Name: %s\n", group.ID, group.Name)
-	}*/
+	api := slack.New(SLACKBOT_TOKEN)
 
 	// user, err := api.GetUserByEmail("")
-	/*user, err := api.GetUserInfo("")
-	if err != nil {
-		fmt.Printf("%s\n", err)
-		return
-	}
-	fmt.Printf("ID: %s, Fullname: %s, Email: %s\n", user.ID, user.Profile.RealName, user.Profile.Email)*/
 
-	api.PostMessage("", slack.MsgOptionText(outbound.Response, false))
+	msg := fmt.Sprintf("Elapsed Time[%s]\nMessage[%s]\n\nResponse\n%s", outbound.End.Sub(outbound.Start), outbound.Message, outbound.Response)
+	api.PostMessage(outbound.Caller, slack.MsgOptionText(msg, false))
 }

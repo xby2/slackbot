@@ -4,17 +4,21 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"strconv"
 
 	"slackbot/inbox"
 	"slackbot/outbox"
 	router "slackbot/router"
 )
 
-var port int
-
 func main() {
 
-	port = 5001
+	port, err := strconv.Atoi(os.Getenv("SERVICE_PORT"))
+	if err != nil {
+		port = 5001
+	}
+
 	servePort := fmt.Sprintf(":%d", port)
 
 	rtr := router.GetRouter()
