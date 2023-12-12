@@ -1,0 +1,23 @@
+# docker-compose up
+
+version: '21'
+
+services:
+  eksy:
+    image: xby2/ai:bananatiger
+    ports:
+      - "5005:5005"
+    environment:
+      SERVICE_PORT: 5005
+
+  assistbot:
+    image: xby2/slackbot:firstbot
+    depends_on:
+      - eksy
+    ports:
+      - "5001:5001"
+    environment:
+      SLACKBOT_TOKEN: TOKENTOKENTOKEN
+      SERVICE_ADDRESS: http://eksy:5005/eksy
+      BOT_TYPE: ACTION_ITEMS_SUMMARY
+      SERVICE_PORT: 5001
