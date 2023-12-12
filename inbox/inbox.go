@@ -33,7 +33,7 @@ func makeInboundRequest(inbound InboundRequest) {
 
 	// prepare Body for request, includes: prompt, message, maxtokens
 	// prompt pulled from prompt package
-	var j = []byte(fmt.Sprintf(`{"prompt": "%s", "message": "%s", "maxtokens": 100}`, prompt.PROMPTS[BOT_TYPE], inbound.Message))
+	var j = []byte(fmt.Sprintf(`{"prompt": "%s", "message": "%s", "maxtokens": 2048}`, prompt.PROMPTS[BOT_TYPE], inbound.Message))
 
 	// make request, timeout set to 5 minutes
 	req, _ := http.NewRequest("POST", SERVICE_ADDRESS, bytes.NewBuffer(j))
